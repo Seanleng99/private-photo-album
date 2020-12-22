@@ -4,10 +4,14 @@ import 'package:private_photo_album/screens/gallery_screen.dart';
 import 'package:private_photo_album/screens/home_screen.dart';
 import 'package:private_photo_album/screens/tab_screen.dart';
 import 'package:private_photo_album/screens/add_photo_screen.dart';
-import 'package:private_photo_album/providers/pictures.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() => runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -15,7 +19,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<Pictures>(create: (_) => Pictures()),
         ChangeNotifierProvider<Themes>(create: (_) => Themes(ThemeData.dark())),
       ],
       child: Container(

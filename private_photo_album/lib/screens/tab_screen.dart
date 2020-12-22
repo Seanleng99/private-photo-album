@@ -66,17 +66,17 @@ class _TabScreenState extends State<TabScreen> {
           BottomNavigationBarItem(
             backgroundColor: Colors.teal,
             icon: Icon(Icons.home),
-            title: Text('Home'),
+            label: 'Home',
           ),
           BottomNavigationBarItem(
             backgroundColor: Colors.teal,
             icon: Icon(Icons.image),
-            title: Text('Images'),
+            label: 'Images',
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
+        child: Icon(Icons.add_a_photo),
         elevation: 10.0,
         backgroundColor: Colors.teal,
         onPressed: () {

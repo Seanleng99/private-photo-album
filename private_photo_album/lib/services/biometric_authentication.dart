@@ -55,9 +55,9 @@ class _BiometricAuthenticationState extends State<BiometricAuthentication> {
 
   @override
   void initState() {
-    // TODO: implement initState
     _checkBiometric();
     _getAvailableBiometrics();
+    super.initState();
   }
 
   @override

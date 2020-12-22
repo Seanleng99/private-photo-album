@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart' as pPath;
-import 'package:provider/provider.dart';
-import 'package:private_photo_album/models/picture.dart';
-import 'package:private_photo_album/providers/pictures.dart';
+import 'package:path/path.dart' as Path;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 class AddPhotoScreen extends StatefulWidget {
   static const routeName = '/add_photo_screen';
@@ -15,56 +13,73 @@ class AddPhotoScreen extends StatefulWidget {
 }
 
 class _AddPhotoScreenState extends State<AddPhotoScreen> {
-  File _takenImage;
+  File _image;
+  final picker = ImagePicker();
+  String _uploadFileURL;
+  CollectionReference imgColRef;
+
+  @override
+  void initState() {
+    imgColRef = FirebaseFirestore.instance.collection('imageURLs');
+    super.initState();
+  }
 
   Future<void> _takePictureFromPhotoFolder() async {
-    final imageFile = await ImagePicker.pickImage(
+    final pickedFile = await picker.getImage(
       source: ImageSource.gallery,
     );
-    if (imageFile == null) {
-      return;
-    }
 
     setState(() {
-      _takenImage = imageFile;
+      _image = File(pickedFile.path);
     });
 
-    final appDir = await pPath.getApplicationDocumentsDirectory();
-    final fileName = path.basename(imageFile.path);
-    final savedImage = await imageFile.copy('${appDir.path}/$fileName');
-
-    var _imageToStore = Picture(picName: savedImage);
-
-    _storeImage() {
-      Provider.of<Pictures>(context, listen: false).storeImage(_imageToStore);
-    }
-
-    _storeImage();
+    if (pickedFile.path == null) retrieveLostData();
   }
 
   Future<void> _takePictureUsingCamera() async {
-    final imageFile = await ImagePicker.pickImage(
-      source: ImageSource.camera,
+    final pickedFile = await picker.getImage(
+      source: ImageSource.gallery,
     );
-    if (imageFile == null) {
-      return;
-    }
 
     setState(() {
-      _takenImage = imageFile;
+      _image = File(pickedFile.path);
     });
 
-    final appDir = await pPath.getApplicationDocumentsDirectory();
-    final fileName = path.basename(imageFile.path);
-    final savedImage = await imageFile.copy('${appDir.path}/$fileName');
+    if (pickedFile.path == null) retrieveLostData();
+  }
 
-    var _imageToStore = Picture(picName: savedImage);
-
-    _storeImage() {
-      Provider.of<Pictures>(context, listen: false).storeImage(_imageToStore);
+  Future<void> retrieveLostData() async {
+    final LostData response = await picker.getLostData();
+    if (response.isEmpty) {
+      return;
     }
+    if (response.file != null) {
+      setState(() {
+        _image = File(response.file.path);
+      });
+    } else {
+      print(response.file);
+    }
+  }
 
-    _storeImage();
+  Future uploadFile() async {
+    firebase_storage.Reference ref = firebase_storage.FirebaseStorage.instance
+        .ref()
+        .child('images/${Path.basename(_image.path)}');
+
+    firebase_storage.UploadTask task = ref.putFile(_image);
+
+    task.whenComplete(() async {
+      print('File uploaded!');
+      await ref.getDownloadURL().then((fileURL) {
+        setState(() {
+          _uploadFileURL = fileURL;
+        });
+      }).whenComplete(() async {
+        await imgColRef.add({'url': _uploadFileURL});
+        print('Link added to the database!');
+      });
+    });
   }
 
   @override
@@ -81,7 +96,40 @@ class _AddPhotoScreenState extends State<AddPhotoScreen> {
               ),
               label: Text('Open camera'),
               textColor: Colors.black,
-              onPressed: _takePictureUsingCamera,
+              onPressed: () {
+                _takePictureUsingCamera().whenComplete(
+                  () => showDialog(
+                    context: context,
+                    child: AlertDialog(
+                      title: Text('Confirm Upload?'),
+                      content: Container(
+                        height: MediaQuery.of(context).size.height / 3,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                              image: AssetImage(_image.path),
+                              fit: BoxFit.cover),
+                        ),
+                      ),
+                      actions: [
+                        FlatButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('Cancel'),
+                        ),
+                        FlatButton(
+                          onPressed: () {
+                            uploadFile();
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('Confirm'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
             FlatButton.icon(
               icon: Icon(
@@ -90,7 +138,40 @@ class _AddPhotoScreenState extends State<AddPhotoScreen> {
               ),
               label: Text('Browse folder'),
               textColor: Colors.black,
-              onPressed: _takePictureFromPhotoFolder,
+              onPressed: () {
+                _takePictureFromPhotoFolder().whenComplete(
+                  () => showDialog(
+                    context: context,
+                    child: AlertDialog(
+                      title: Text('Confirm Upload?'),
+                      content: Container(
+                        height: MediaQuery.of(context).size.height / 3,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                              image: AssetImage(_image.path),
+                              fit: BoxFit.cover),
+                        ),
+                      ),
+                      actions: [
+                        FlatButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('Cancel'),
+                        ),
+                        FlatButton(
+                          onPressed: () {
+                            uploadFile();
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('Confirm'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),
