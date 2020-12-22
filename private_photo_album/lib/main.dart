@@ -38,8 +38,8 @@ class MaterialAppWithTheme extends StatelessWidget {
       routes: {
         '/': (context) => HomeScreen(),
         TabScreen.routeName: (context) => TabScreen(),
-        AddPhotoScreen.routeName: (context) => AddPhotoScreen(),
         GalleryScreen.routeName: (context) => GalleryScreen(),
+        AddPhotoScreen.routeName: (context) => AddPhotoScreen(),
       },
     );
   }
