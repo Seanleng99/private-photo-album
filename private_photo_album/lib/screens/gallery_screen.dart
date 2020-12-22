@@ -43,19 +43,19 @@ class _GalleryScreenState extends State<GalleryScreen> {
                   itemCount: snapshot.data.documents.length,
                   itemBuilder: (context, index) => GestureDetector(
                     child: Container(
-                      margin: EdgeInsets.all(12),
+                      margin: EdgeInsets.all(15),
                       decoration: BoxDecoration(
                           color: Colors.transparent,
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                          borderRadius: BorderRadius.all(Radius.circular(15)),
                           boxShadow: [
                             BoxShadow(
                                 color: Colors.grey.withOpacity(0.5),
                                 spreadRadius: 2,
-                                blurRadius: 5,
+                                blurRadius: 10,
                                 offset: Offset(0, 0))
                           ]),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        borderRadius: BorderRadius.all(Radius.circular(15)),
                         child: FadeInImage.memoryNetwork(
                           placeholder: kTransparentImage,
                           image: snapshot.data.documents[index].get('url'),
